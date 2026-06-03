@@ -1,0 +1,1314 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>FitRPG — Forja tu Cuerpo</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@400;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-deep: #0a0b14;
+  --bg-mid: #111422;
+  --bg-card: #161929;
+  --bg-card2: #1c2035;
+  --border: #2a2f4e;
+  --border-bright: #3d4470;
+  --gold: #f0c040;
+  --gold2: #d4a820;
+  --gold-glow: rgba(240,192,64,0.3);
+  --cyan: #4ee8f0;
+  --cyan2: #2ab8c0;
+  --purple: #9b6dff;
+  --purple2: #7a4fdd;
+  --green: #4ade80;
+  --red: #f87171;
+  --pink: #f472b6;
+  --text: #e8eaf6;
+  --text2: #8890b8;
+  --text3: #4a5080;
+  --nav-h: 60px;
+  --muscle-gray: #2a2f4e;
+  --muscle-green: #22c55e;
+  --muscle-blue: #3b82f6;
+  --muscle-violet: #8b5cf6;
+  --muscle-pink: #ec4899;
+  --muscle-red: #ef4444;
+  --muscle-yellow: #eab308;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--bg-deep);}
+body{font-family:'Nunito',sans-serif;color:var(--text);display:flex;flex-direction:column;}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-track{background:var(--bg-mid);}
+::-webkit-scrollbar-thumb{background:var(--border-bright);border-radius:2px;}
+
+/* NAV */
+#nav{display:flex;align-items:center;justify-content:space-around;background:var(--bg-card);border-bottom:1px solid var(--border);height:var(--nav-h);flex-shrink:0;z-index:100;}
+.nav-btn{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 14px;cursor:pointer;border-radius:8px;transition:all .2s;color:var(--text3);font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;border:none;background:none;}
+.nav-btn svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;}
+.nav-btn.active{color:var(--gold);background:rgba(240,192,64,.08);}
+.nav-btn:hover:not(.active){color:var(--text2);background:rgba(255,255,255,.04);}
+
+/* PAGES */
+#app{flex:1;overflow:hidden;position:relative;}
+.page{position:absolute;inset:0;overflow-y:auto;padding:16px;display:none;flex-direction:column;gap:16px;}
+.page.active{display:flex;}
+
+/* CARDS */
+.card{background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:16px;}
+.card-title{font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--text2);margin-bottom:12px;}
+
+/* XP BAR */
+.xp-bar-wrap{background:rgba(255,255,255,.06);border-radius:100px;height:8px;overflow:hidden;}
+.xp-bar-fill{height:100%;border-radius:100px;transition:width .6s ease;}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:100px;font-size:11px;font-weight:700;}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 18px;border-radius:10px;font-family:'Nunito',sans-serif;font-weight:700;font-size:13px;cursor:pointer;border:none;transition:all .18s;letter-spacing:.3px;}
+.btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#1a1000;box-shadow:0 4px 15px rgba(240,192,64,.3);}
+.btn-gold:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(240,192,64,.4);}
+.btn-ghost{background:transparent;border:1px solid var(--border-bright);color:var(--text2);}
+.btn-ghost:hover{border-color:var(--gold);color:var(--gold);}
+.btn-sm{padding:6px 12px;font-size:12px;}
+
+/* ===========================
+   PAGE: PERFIL
+   =========================== */
+#page-perfil .profile-header{
+  background:linear-gradient(135deg,#1a1f3d,#141830);
+  border:1px solid var(--border-bright);
+  border-radius:16px;
+  padding:20px;
+  display:flex;gap:16px;align-items:flex-start;
+}
+.avatar-wrap{position:relative;flex-shrink:0;}
+.avatar-img{width:72px;height:72px;border-radius:50%;object-fit:cover;display:flex;align-items:center;justify-content:center;font-size:36px;background:var(--bg-mid);border:3px solid transparent;}
+.avatar-frame{position:absolute;inset:-4px;border-radius:50%;pointer-events:none;}
+.profile-info{flex:1;min-width:0;}
+.profile-name{font-family:'Cinzel',serif;font-size:18px;font-weight:700;color:var(--text);}
+.profile-title{font-size:12px;color:var(--gold);font-weight:700;margin:2px 0 8px;}
+.profile-level-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.level-orb{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--purple2));display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-weight:700;font-size:14px;box-shadow:0 0 12px rgba(155,109,255,.4);}
+.profile-xp-label{font-size:11px;color:var(--text2);margin-bottom:3px;}
+.profile-coins{display:flex;align-items:center;gap:5px;font-size:13px;font-weight:700;color:var(--gold);}
+
+.profile-snapshot{background:linear-gradient(135deg,#0f1428,#161d38);border:1px solid var(--gold);border-radius:16px;padding:18px;}
+.snapshot-title{font-family:'Cinzel Decorative',serif;font-size:13px;color:var(--gold);text-align:center;margin-bottom:14px;text-shadow:0 0 10px var(--gold-glow);}
+.snapshot-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.snap-item{background:rgba(255,255,255,.04);border-radius:10px;padding:10px;text-align:center;}
+.snap-val{font-family:'Cinzel',serif;font-size:18px;font-weight:700;color:var(--cyan);}
+.snap-label{font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;}
+.snap-streak{background:linear-gradient(135deg,rgba(240,192,64,.1),rgba(240,192,64,.05));border:1px solid rgba(240,192,64,.3);}
+.snap-streak .snap-val{color:var(--gold);}
+.collections-preview{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;}
+.card-mini{width:38px;height:52px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:20px;border:2px solid transparent;flex-shrink:0;}
+
+/* ===========================
+   PAGE: CUERPO
+   =========================== */
+#page-cuerpo .body-container{display:flex;flex-direction:column;align-items:center;gap:16px;}
+.body-svg-wrap{position:relative;width:100%;max-width:320px;cursor:pointer;}
+.body-svg-wrap svg{width:100%;height:auto;}
+.muscle-tooltip{
+  position:fixed;
+  background:var(--bg-card2);
+  border:1px solid var(--border-bright);
+  border-radius:12px;
+  padding:12px 16px;
+  font-size:12px;
+  pointer-events:none;
+  z-index:200;
+  min-width:160px;
+  box-shadow:0 8px 30px rgba(0,0,0,.5);
+  display:none;
+}
+.tooltip-name{font-family:'Cinzel',serif;font-size:13px;font-weight:700;margin-bottom:6px;}
+.tooltip-level{color:var(--gold);font-weight:700;}
+.muscles-legend{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;max-width:320px;}
+.legend-item{display:flex;align-items:center;gap:8px;font-size:12px;}
+.legend-dot{width:12px;height:12px;border-radius:3px;flex-shrink:0;}
+
+/* ===========================
+   PAGE: EJERCICIOS
+   =========================== */
+.exercise-list{display:flex;flex-direction:column;gap:10px;}
+.ex-card{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:border-color .2s;}
+.ex-card:hover{border-color:var(--border-bright);}
+.ex-header{display:flex;align-items:center;gap:12px;padding:12px 14px;cursor:pointer;}
+.ex-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.ex-info{flex:1;min-width:0;}
+.ex-name{font-weight:700;font-size:14px;}
+.ex-tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:3px;}
+.ex-tag{font-size:10px;padding:1px 6px;border-radius:100px;font-weight:700;}
+.ex-expand{width:28px;height:28px;border-radius:50%;background:var(--bg-mid);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .2s;}
+.ex-card.open .ex-expand{transform:rotate(180deg);}
+.ex-body{display:none;padding:0 14px 14px;border-top:1px solid var(--border);}
+.ex-card.open .ex-body{display:block;}
+.ex-desc{font-size:12px;color:var(--text2);line-height:1.6;margin:10px 0 12px;}
+.ex-rewards{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
+.reward-chip{display:flex;align-items:center;gap:4px;background:rgba(255,255,255,.05);border-radius:8px;padding:4px 8px;font-size:11px;font-weight:700;}
+.rep-input-row{display:flex;align-items:center;gap:8px;}
+.rep-input{width:70px;background:var(--bg-mid);border:1px solid var(--border-bright);border-radius:8px;padding:8px 10px;color:var(--text);font-family:'Nunito',sans-serif;font-size:14px;font-weight:700;text-align:center;}
+.rep-input:focus{outline:none;border-color:var(--gold);}
+.filter-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;flex-shrink:0;}
+.filter-chip{padding:5px 12px;border-radius:100px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text2);white-space:nowrap;transition:all .15s;}
+.filter-chip.active{background:rgba(240,192,64,.15);border-color:var(--gold);color:var(--gold);}
+
+/* ===========================
+   PAGE: RUTINAS
+   =========================== */
+.rutina-card{background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:16px;transition:all .2s;}
+.rutina-card.completed{opacity:.5;border-style:dashed;}
+.rutina-header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px;}
+.rutina-name{font-family:'Cinzel',serif;font-size:15px;font-weight:700;}
+.rutina-diff{padding:2px 8px;border-radius:100px;font-size:10px;font-weight:700;letter-spacing:.5px;}
+.rutina-exercises{display:flex;flex-direction:column;gap:6px;margin:10px 0;}
+.rutina-ex-row{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);}
+.rutina-rewards{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);}
+.countdown{font-size:11px;color:var(--text3);text-align:center;margin-top:6px;}
+
+/* ===========================
+   PAGE: TIENDA & LOGROS
+   =========================== */
+.tabs{display:flex;gap:2px;background:var(--bg-mid);border-radius:10px;padding:3px;margin-bottom:14px;}
+.tab{flex:1;padding:7px;border-radius:8px;text-align:center;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;color:var(--text2);}
+.tab.active{background:var(--bg-card2);color:var(--text);}
+.tab-content{display:none;}
+.tab-content.active{display:block;}
+
+.shop-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.shop-item{background:var(--bg-card2);border:1px solid var(--border);border-radius:12px;padding:12px;text-align:center;transition:all .2s;}
+.shop-item:hover{border-color:var(--gold);transform:translateY(-2px);}
+.shop-item .item-preview{font-size:36px;margin-bottom:8px;display:block;}
+.shop-item .item-name{font-size:12px;font-weight:700;margin-bottom:4px;}
+.shop-item .item-desc{font-size:10px;color:var(--text2);margin-bottom:8px;}
+.shop-item .item-price{display:flex;align-items:center;justify-content:center;gap:4px;font-size:13px;font-weight:700;color:var(--gold);}
+
+.logro-item{display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg-card2);border-radius:12px;border:1px solid var(--border);margin-bottom:8px;}
+.logro-icon{font-size:28px;flex-shrink:0;}
+.logro-info{flex:1;}
+.logro-name{font-weight:700;font-size:13px;}
+.logro-desc{font-size:11px;color:var(--text2);margin-top:2px;}
+.logro-reward{font-size:11px;color:var(--gold);font-weight:700;margin-top:4px;}
+.logro-item.done{background:rgba(74,222,128,.05);border-color:rgba(74,222,128,.3);}
+.logro-item .logro-check{width:24px;height:24px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;}
+
+/* ===========================
+   PAGE: ESTADÍSTICAS
+   =========================== */
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.stat-box{background:var(--bg-card2);border-radius:12px;padding:12px;text-align:center;}
+.stat-val{font-family:'Cinzel',serif;font-size:22px;font-weight:700;color:var(--cyan);}
+.stat-label{font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-top:2px;}
+.muscle-stat-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
+.muscle-stat-row:last-child{border-bottom:none;}
+.muscle-stat-name{width:90px;font-size:12px;font-weight:700;flex-shrink:0;}
+.muscle-stat-bar-wrap{flex:1;}
+.muscle-stat-level{font-size:11px;color:var(--text2);width:40px;text-align:right;flex-shrink:0;}
+
+/* ===========================
+   MODALS
+   =========================== */
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:300;display:flex;align-items:center;justify-content:center;padding:20px;}
+.modal{background:var(--bg-card);border:1px solid var(--border-bright);border-radius:20px;padding:24px;width:100%;max-width:400px;max-height:80vh;overflow-y:auto;position:relative;}
+.modal-title{font-family:'Cinzel',serif;font-size:16px;font-weight:700;margin-bottom:16px;text-align:center;}
+.modal-close{position:absolute;top:16px;right:16px;width:28px;height:28px;border-radius:50%;background:var(--bg-mid);border:none;color:var(--text2);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;}
+
+/* LEVEL UP */
+.levelup-modal{text-align:center;}
+.levelup-orb{width:80px;height:80px;border-radius:50%;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;font-family:'Cinzel Decorative',serif;font-size:28px;font-weight:900;animation:pulse-orb 1s ease infinite alternate;}
+@keyframes pulse-orb{from{box-shadow:0 0 20px rgba(155,109,255,.5);}to{box-shadow:0 0 40px rgba(155,109,255,.9),0 0 80px rgba(155,109,255,.3);}}
+
+/* COLLECTIBLE */
+.card-reveal{width:120px;height:168px;border-radius:14px;margin:0 auto 16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;border:3px solid transparent;animation:card-flip .4s ease;}
+@keyframes card-flip{from{transform:rotateY(90deg) scale(.8);}to{transform:rotateY(0) scale(1);}}
+.card-reveal .card-emoji{font-size:52px;}
+.card-reveal .card-rarity{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;}
+
+/* TOAST */
+#toast-container{position:fixed;bottom:calc(var(--nav-h) + 12px);left:50%;transform:translateX(-50%);z-index:500;display:flex;flex-direction:column;gap:6px;pointer-events:none;width:90%;max-width:340px;}
+.toast{background:var(--bg-card2);border:1px solid var(--border-bright);border-radius:12px;padding:10px 16px;font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px;animation:toast-in .3s ease,toast-out .3s ease 2.7s forwards;box-shadow:0 4px 20px rgba(0,0,0,.4);}
+@keyframes toast-in{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+@keyframes toast-out{from{opacity:1;}to{opacity:0;transform:translateY(-10px);}}
+
+/* RACHA */
+.streak-badge{display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,rgba(240,192,64,.15),rgba(240,192,64,.05));border:1px solid rgba(240,192,64,.4);border-radius:100px;padding:4px 12px;font-size:13px;font-weight:700;color:var(--gold);}
+
+/* MISC */
+.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.section-title{font-family:'Cinzel',serif;font-size:13px;font-weight:700;letter-spacing:1px;}
+.empty-state{text-align:center;padding:30px;color:var(--text3);font-size:13px;}
+
+/* Collectible cards */
+.cards-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;}
+.coll-card{aspect-ratio:.7/1;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;border:2px solid transparent;font-size:22px;cursor:pointer;transition:transform .15s;position:relative;}
+.coll-card:hover{transform:scale(1.05);}
+.coll-card .coll-count{position:absolute;bottom:3px;right:4px;font-size:9px;font-weight:700;color:rgba(255,255,255,.7);}
+.coll-card.locked{opacity:.2;filter:grayscale(1);}
+
+/* Rarity colors */
+.rarity-comun{background:linear-gradient(135deg,#1e2235,#252b42);border-color:#3d4470;}
+.rarity-raro{background:linear-gradient(135deg,#0d2040,#0a1a35);border-color:#3b82f6;box-shadow:0 0 8px rgba(59,130,246,.2);}
+.rarity-epico{background:linear-gradient(135deg,#1a0d30,#150a28);border-color:#8b5cf6;box-shadow:0 0 8px rgba(139,92,246,.3);}
+.rarity-legendario{background:linear-gradient(135deg,#2a1500,#1e1000);border-color:#f59e0b;box-shadow:0 0 12px rgba(245,158,11,.4);}
+
+/* BODY SVG MUSCLE COLORS */
+.m-lv0{fill:var(--muscle-gray);transition:fill .5s;}
+.m-lv1{fill:#2d5a3d;transition:fill .5s;}
+.m-lv2{fill:#22c55e;transition:fill .5s;}
+.m-lv3{fill:#2563eb;transition:fill .5s;}
+.m-lv4{fill:#7c3aed;transition:fill .5s;}
+.m-lv5{fill:#be185d;transition:fill .5s;}
+.m-lv6{fill:#dc2626;transition:fill .5s;}
+.m-lv7{fill:#ca8a04;transition:fill .5s;}
+.muscle-zone{cursor:pointer;opacity:.9;transition:opacity .15s;}
+.muscle-zone:hover{opacity:1;filter:brightness(1.3);}
+
+/* Import/export buttons */
+.io-row{display:flex;gap:8px;margin-bottom:12px;}
+
+</style>
+</head>
+<body>
+
+<div id="app">
+
+  <!-- PAGE: PERFIL -->
+  <div id="page-perfil" class="page active">
+    <div class="io-row">
+      <button class="btn btn-ghost btn-sm" onclick="exportSave()">⬆ Exportar</button>
+      <button class="btn btn-ghost btn-sm" onclick="document.getElementById('import-file').click()">⬇ Importar</button>
+      <input type="file" id="import-file" accept=".json" style="display:none" onchange="importSave(this)">
+    </div>
+
+    <div class="profile-header">
+      <div class="avatar-wrap">
+        <div class="avatar-img" id="avatar-display" style="font-size:36px;">🧙</div>
+        <svg class="avatar-frame" id="frame-display" viewBox="0 0 80 80"></svg>
+      </div>
+      <div class="profile-info">
+        <div class="profile-name" id="p-name">Guerrero</div>
+        <div class="profile-title" id="p-title">⚔️ Novato del Gym</div>
+        <div class="profile-level-row">
+          <div class="level-orb" id="p-level">1</div>
+          <div style="flex:1">
+            <div class="profile-xp-label">XP General <span id="p-xp-txt" style="color:var(--cyan)">0 / 100</span></div>
+            <div class="xp-bar-wrap"><div class="xp-bar-fill" id="p-xp-bar" style="width:0%;background:linear-gradient(90deg,var(--purple),var(--cyan))"></div></div>
+          </div>
+        </div>
+        <div class="profile-coins">🪙 <span id="p-coins">0</span> monedas</div>
+        <div style="margin-top:6px"><span class="streak-badge">🔥 <span id="p-streak">0</span> días de racha</span></div>
+      </div>
+    </div>
+
+    <!-- SNAPSHOT para compartir -->
+    <div class="profile-snapshot">
+      <div class="snapshot-title">✦ MI PROGRESO ✦</div>
+      <div class="snapshot-grid">
+        <div class="snap-item"><div class="snap-val" id="snap-level">1</div><div class="snap-label">Nivel</div></div>
+        <div class="snap-item snap-streak"><div class="snap-val" id="snap-streak">0🔥</div><div class="snap-label">Racha</div></div>
+        <div class="snap-item"><div class="snap-val" id="snap-exercises">0</div><div class="snap-label">Ejercicios</div></div>
+        <div class="snap-item"><div class="snap-val" id="snap-total-reps">0</div><div class="snap-label">Reps totales</div></div>
+      </div>
+      <div style="margin-top:10px;font-size:10px;color:var(--text2);text-align:center">Zona de músculos más entrenada: <span id="snap-best-muscle" style="color:var(--cyan);font-weight:700">—</span></div>
+      <div style="margin-top:10px">
+        <div style="font-size:10px;color:var(--text2);margin-bottom:6px;text-align:center">Colección reciente:</div>
+        <div class="collections-preview" id="snap-cards"></div>
+      </div>
+      <div style="margin-top:10px;text-align:center;font-size:10px;color:var(--text3)">⚔️ FitRPG — Forja tu Cuerpo ⚔️</div>
+    </div>
+
+    <!-- Personalización -->
+    <div class="card">
+      <div class="card-title">Personalización activa</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <div>
+          <div style="font-size:10px;color:var(--text2);margin-bottom:4px">Avatar</div>
+          <div style="font-size:28px" id="equip-avatar">🧙</div>
+        </div>
+        <div>
+          <div style="font-size:10px;color:var(--text2);margin-bottom:4px">Título</div>
+          <div style="font-size:12px;color:var(--gold);font-weight:700" id="equip-title">⚔️ Novato del Gym</div>
+        </div>
+        <div>
+          <div style="font-size:10px;color:var(--text2);margin-bottom:4px">Color</div>
+          <div style="width:28px;height:28px;border-radius:6px" id="equip-color"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE: CUERPO -->
+  <div id="page-cuerpo" class="page">
+    <div class="card-title" style="margin:0">Mapa Muscular</div>
+    <div class="body-container">
+      <div class="body-svg-wrap">
+        <svg viewBox="0 0 200 420" xmlns="http://www.w3.org/2000/svg" id="body-svg">
+          <!-- HEAD -->
+          <ellipse cx="100" cy="28" rx="20" ry="24" fill="#1c2035" stroke="#2a2f4e" stroke-width="1"/>
+          <!-- NECK -->
+          <rect x="91" y="50" width="18" height="14" rx="4" fill="#1c2035" stroke="#2a2f4e" stroke-width="1"/>
+          <!-- TORSO base -->
+          <path d="M65 64 Q100 58 135 64 L142 150 Q100 158 58 150 Z" fill="#1c2035" stroke="#2a2f4e" stroke-width="1"/>
+          <!-- SHOULDERS -->
+          <ellipse class="muscle-zone" id="mz-hombros" cx="58" cy="80" rx="18" ry="14" data-muscle="hombros"/>
+          <ellipse class="muscle-zone" id="mz-hombros-r" cx="142" cy="80" rx="18" ry="14" data-muscle="hombros"/>
+          <!-- CHEST pecs -->
+          <path class="muscle-zone" id="mz-pecho-l" d="M72 70 Q100 66 100 66 L100 108 Q80 112 66 104 Z" data-muscle="pecho"/>
+          <path class="muscle-zone" id="mz-pecho-r" d="M128 70 Q100 66 100 66 L100 108 Q120 112 134 104 Z" data-muscle="pecho"/>
+          <!-- ABS -->
+          <rect class="muscle-zone" id="mz-abdomen-1" x="88" y="112" width="24" height="12" rx="4" data-muscle="abdomen"/>
+          <rect class="muscle-zone" id="mz-abdomen-2" x="88" y="127" width="24" height="12" rx="4" data-muscle="abdomen"/>
+          <rect class="muscle-zone" id="mz-abdomen-3" x="88" y="142" width="24" height="11" rx="4" data-muscle="abdomen"/>
+          <!-- BACK sides (lats) -->
+          <path class="muscle-zone" id="mz-espalda-l" d="M58 78 L65 64 L65 145 Q55 140 50 120 Z" data-muscle="espalda"/>
+          <path class="muscle-zone" id="mz-espalda-r" d="M142 78 L135 64 L135 145 Q145 140 150 120 Z" data-muscle="espalda"/>
+          <!-- UPPER ARMS biceps -->
+          <ellipse class="muscle-zone" id="mz-biceps-l" cx="44" cy="112" rx="12" ry="22" data-muscle="biceps"/>
+          <ellipse class="muscle-zone" id="mz-biceps-r" cx="156" cy="112" rx="12" ry="22" data-muscle="biceps"/>
+          <!-- LOWER ARMS triceps/forearms -->
+          <rect class="muscle-zone" id="mz-triceps-l" x="30" y="136" width="18" height="36" rx="7" data-muscle="triceps"/>
+          <rect class="muscle-zone" id="mz-triceps-r" x="152" y="136" width="18" height="36" rx="7" data-muscle="triceps"/>
+          <!-- FOREARMS -->
+          <rect class="muscle-zone" id="mz-antebrazos-l" x="28" y="175" width="16" height="30" rx="6" data-muscle="antebrazos"/>
+          <rect class="muscle-zone" id="mz-antebrazos-r" x="156" y="175" width="16" height="30" rx="6" data-muscle="antebrazos"/>
+          <!-- HANDS -->
+          <ellipse cx="36" cy="213" rx="9" ry="7" fill="#1c2035" stroke="#2a2f4e" stroke-width="1"/>
+          <ellipse cx="164" cy="213" rx="9" ry="7" fill="#1c2035" stroke="#2a2f4e" stroke-width="1"/>
+          <!-- WAIST/HIP -->
+          <path d="M68 150 Q100 158 132 150 L138 180 Q100 188 62 180 Z" fill="#1c2035" stroke="#2a2f4e" stroke-width="1"/>
+          <!-- GLUTES -->
+          <ellipse class="muscle-zone" id="mz-gluteos-l" cx="85" cy="182" rx="20" ry="14" data-muscle="gluteos"/>
+          <ellipse class="muscle-zone" id="mz-gluteos-r" cx="115" cy="182" rx="20" ry="14" data-muscle="gluteos"/>
+          <!-- QUADS -->
+          <rect class="muscle-zone" id="mz-cuadriceps-l" x="64" y="195" width="28" height="68" rx="10" data-muscle="cuadriceps"/>
+          <rect class="muscle-zone" id="mz-cuadriceps-r" x="108" y="195" width="28" height="68" rx="10" data-muscle="cuadriceps"/>
+          <!-- HAMSTRINGS (behind quads visually offset) -->
+          <!-- KNEES -->
+          <ellipse cx="78" cy="268" rx="14" ry="8" fill="#1c2035" stroke="#2a2f4e" stroke-width="1"/>
+          <ellipse cx="122" cy="268" rx="14" ry="8" fill="#1c2035" stroke="#2a2f4e" stroke-width="1"/>
+          <!-- CALVES -->
+          <rect class="muscle-zone" id="mz-pantorrillas-l" x="66" y="278" width="24" height="58" rx="10" data-muscle="pantorrillas"/>
+          <rect class="muscle-zone" id="mz-pantorrillas-r" x="110" y="278" width="24" height="58" rx="10" data-muscle="pantorrillas"/>
+          <!-- ISQUIOTIBIALES hidden behind but separate -->
+          <!-- FEET -->
+          <ellipse cx="78" cy="342" rx="12" ry="6" fill="#1c2035" stroke="#2a2f4e" stroke-width="1"/>
+          <ellipse cx="122" cy="342" rx="12" ry="6" fill="#1c2035" stroke="#2a2f4e" stroke-width="1"/>
+        </svg>
+      </div>
+
+      <div class="muscles-legend" id="muscles-legend"></div>
+    </div>
+    <div class="muscle-tooltip" id="muscle-tooltip">
+      <div class="tooltip-name" id="tt-name">—</div>
+      <div style="font-size:11px;color:var(--text2);margin-bottom:6px" id="tt-desc">—</div>
+      <div class="tooltip-level">Nivel <span id="tt-level">0</span></div>
+      <div class="profile-xp-label" style="margin-top:4px">XP: <span id="tt-xp">0</span> / <span id="tt-xpmax">100</span></div>
+      <div class="xp-bar-wrap" style="margin-top:4px"><div class="xp-bar-fill" id="tt-bar" style="width:0%;background:var(--green)"></div></div>
+    </div>
+  </div>
+
+  <!-- PAGE: EJERCICIOS -->
+  <div id="page-ejercicios" class="page">
+    <div class="filter-row" id="filter-row"></div>
+    <div class="exercise-list" id="exercise-list"></div>
+  </div>
+
+  <!-- PAGE: RUTINAS -->
+  <div id="page-rutinas" class="page">
+    <div class="card" style="background:linear-gradient(135deg,#0d1a2e,#111828);border-color:rgba(78,232,240,.2)">
+      <div style="font-size:12px;color:var(--cyan);font-weight:700;margin-bottom:4px">⏰ Reinicio diario</div>
+      <div style="font-size:11px;color:var(--text2)">Las rutinas se reinician cada 24hs. ¡Completá una por día!</div>
+    </div>
+    <div id="rutinas-list"></div>
+  </div>
+
+  <!-- PAGE: COLECCIÓN / TIENDA / LOGROS -->
+  <div id="page-tienda" class="page">
+    <div class="tabs" id="main-tabs">
+      <div class="tab active" onclick="switchTab('coleccion')">Colección</div>
+      <div class="tab" onclick="switchTab('tienda')">Tienda</div>
+      <div class="tab" onclick="switchTab('logros')">Logros</div>
+    </div>
+
+    <!-- COLECCIÓN -->
+    <div id="tab-coleccion" class="tab-content active">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div style="font-size:12px;color:var(--text2)">Cartas: <span id="card-count" style="color:var(--cyan);font-weight:700">0</span> / <span id="card-total"></span></div>
+        <div class="profile-coins">🪙 <span id="coins-col">0</span></div>
+      </div>
+      <div class="cards-grid" id="cards-grid"></div>
+    </div>
+
+    <!-- TIENDA -->
+    <div id="tab-tienda" class="tab-content">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div class="section-title">Tienda</div>
+        <div class="profile-coins">🪙 <span id="coins-shop">0</span></div>
+      </div>
+      <div class="shop-grid" id="shop-grid"></div>
+    </div>
+
+    <!-- LOGROS -->
+    <div id="tab-logros" class="tab-content">
+      <div id="logros-list"></div>
+    </div>
+  </div>
+
+  <!-- PAGE: ESTADÍSTICAS -->
+  <div id="page-stats" class="page">
+    <div class="card">
+      <div class="card-title">Resumen General</div>
+      <div class="stat-grid" id="stats-general"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Niveles Musculares</div>
+      <div id="muscle-stats-list"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Ejercicios realizados</div>
+      <div id="exercise-stats-list" style="font-size:12px;color:var(--text2)"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- NAV -->
+<nav id="nav">
+  <button class="nav-btn active" onclick="navigate('perfil')" id="nb-perfil">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+    Perfil
+  </button>
+  <button class="nav-btn" onclick="navigate('cuerpo')" id="nb-cuerpo">
+    <svg viewBox="0 0 24 24"><path d="M12 2a3 3 0 1 0 0 6 3 3 0 0 0 0-6zM7 14s-2 0-2 3v5h14v-5c0-3-2-3-2-3l-2-3h-6z"/></svg>
+    Cuerpo
+  </button>
+  <button class="nav-btn" onclick="navigate('ejercicios')" id="nb-ejercicios">
+    <svg viewBox="0 0 24 24"><path d="M6 4v16M18 4v16M6 12h12M3 8h3M18 8h3M3 16h3M18 16h3"/></svg>
+    Ejercicios
+  </button>
+  <button class="nav-btn" onclick="navigate('rutinas')" id="nb-rutinas">
+    <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+    Rutinas
+  </button>
+  <button class="nav-btn" onclick="navigate('tienda')" id="nb-tienda">
+    <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+    Tienda
+  </button>
+  <button class="nav-btn" onclick="navigate('stats')" id="nb-stats">
+    <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+    Stats
+  </button>
+</nav>
+
+<!-- MODAL CONTAINER -->
+<div id="modal-container"></div>
+<div id="toast-container"></div>
+
+<script>
+// ============================================================
+// DATA
+// ============================================================
+const MUSCLES = {
+  pecho:        {name:"Pecho",       desc:"Pectorales mayor y menor"},
+  espalda:      {name:"Espalda",     desc:"Dorsales, trapecios y romboides"},
+  hombros:      {name:"Hombros",     desc:"Deltoides anterior, lateral y posterior"},
+  biceps:       {name:"Bíceps",      desc:"Bíceps braquial"},
+  triceps:      {name:"Tríceps",     desc:"Tríceps braquial"},
+  antebrazos:   {name:"Antebrazos",  desc:"Flexores y extensores del antebrazo"},
+  abdomen:      {name:"Abdomen",     desc:"Recto abdominal y oblicuos"},
+  gluteos:      {name:"Glúteos",     desc:"Glúteo mayor, medio y menor"},
+  cuadriceps:   {name:"Cuádriceps",  desc:"Vasto interno, externo y recto femoral"},
+  pantorrillas: {name:"Pantorrillas",desc:"Gastrocnemio y sóleo"},
+};
+
+const XP_TABLE = [0,100,220,380,580,830,1140,1520,1980,2530,3180];
+// level 1=100xp, level 2=220, ... up to lv10
+
+const LEVEL_COLORS = [
+  {min:0,  fill:"m-lv0"},
+  {min:1,  fill:"m-lv1"},
+  {min:2,  fill:"m-lv2"},
+  {min:3,  fill:"m-lv3"},
+  {min:4,  fill:"m-lv4"},
+  {min:5,  fill:"m-lv5"},
+  {min:6,  fill:"m-lv6"},
+  {min:7,  fill:"m-lv7"},
+];
+
+const EXERCISES = [
+  {id:"flexiones",    name:"Flexiones",    icon:"💪", color:"#ef4444",
+   muscles:{pecho:3,triceps:2,hombros:1},
+   xpEach:4, category:"empuje",
+   desc:"Posición de plancha con brazos al ancho de hombros. Bajá el pecho hasta casi tocar el suelo y empujá hacia arriba. Espalda recta en todo momento."},
+  {id:"sentadillas",  name:"Sentadillas",  icon:"🦵", color:"#f59e0b",
+   muscles:{cuadriceps:4,gluteos:3,pantorrillas:1},
+   xpEach:4, category:"piernas",
+   desc:"Pies al ancho de hombros, punta hacia afuera. Bajá como si fueras a sentarte hasta 90°. Rodillas alineadas con los pies, espalda erguida."},
+  {id:"fondos",       name:"Fondos (Triceps)",icon:"🔱",color:"#8b5cf6",
+   muscles:{triceps:4,pecho:2,hombros:1},
+   xpEach:5, category:"empuje",
+   desc:"Apoyá manos en una silla detrás tuyo, piernas extendidas. Bajá doblando los codos a 90° y empujá. Codos pegados al cuerpo."},
+  {id:"dominadas",    name:"Dominadas",    icon:"🏋️", color:"#3b82f6",
+   muscles:{espalda:5,biceps:3,hombros:1},
+   xpEach:6, category:"jale",
+   desc:"Agarre supino o prono. Jalá el cuerpo hacia arriba hasta que el mentón supere la barra. Bajá completamente con control."},
+  {id:"abdominales",  name:"Abdominales",  icon:"🔥", color:"#f97316",
+   muscles:{abdomen:4},
+   xpEach:3, category:"core",
+   desc:"Acostado boca arriba, rodillas dobladas. Subí el torso hacia las rodillas usando solo el abdomen. Bajá con control, no apoyes completamente."},
+  {id:"plancha",      name:"Plancha",      icon:"⚡", color:"#06b6d4",
+   muscles:{abdomen:3,hombros:2,pecho:1},
+   xpEach:3, category:"core",
+   note:"1 rep = 10 segundos",
+   desc:"Posición de plancha sobre antebrazos o manos. Cuerpo recto de cabeza a talones. Contrae abdomen y glúteos. Mantené la posición. (Cada rep = 10 segundos)"},
+  {id:"zancadas",     name:"Zancadas",     icon:"🚶", color:"#10b981",
+   muscles:{cuadriceps:3,gluteos:4,pantorrillas:1},
+   xpEach:4, category:"piernas",
+   desc:"De pie, dá un paso largo hacia adelante. Bajá hasta que la rodilla trasera casi toque el suelo. Volvé a posición inicial y alternando piernas."},
+  {id:"superman",     name:"Superman",     icon:"🦸", color:"#6366f1",
+   muscles:{espalda:4,gluteos:2},
+   xpEach:4, category:"jale",
+   desc:"Boca abajo, brazos extendidos al frente. Levantá simultáneamente brazos, pecho y piernas del suelo. Sostenélos 2 segundos y bajá."},
+  {id:"curl_bicep",   name:"Curl de Bíceps",icon:"💪",color:"#ec4899",
+   muscles:{biceps:5,antebrazos:2},
+   xpEach:4, category:"jale",
+   desc:"De pie o sentado. Con peso improvisado (botella de agua, mochila). Flexioná el codo desde posición extendida hasta contraer el bícep."},
+  {id:"elevaciones",  name:"Elevaciones Laterales",icon:"🙆",color:"#a78bfa",
+   muscles:{hombros:5,antebrazos:1},
+   xpEach:4, category:"empuje",
+   desc:"Con pesos ligeros a los costados. Elevá los brazos lateralmente hasta la altura del hombro. Bajá con control. Evitá balancear el cuerpo."},
+  {id:"puente_gluteo",name:"Puente de Glúteo",icon:"🌉",color:"#f59e0b",
+   muscles:{gluteos:5,cuadriceps:1,abdomen:1},
+   xpEach:4, category:"piernas",
+   desc:"Boca arriba, rodillas dobladas. Empujá las caderas hacia arriba contrayendo glúteos. Formá línea recta de hombros a rodillas. Sostenélo 2 segundos."},
+  {id:"gemelos",      name:"Elevaciones de Talón",icon:"👟",color:"#34d399",
+   muscles:{pantorrillas:5},
+   xpEach:3, category:"piernas",
+   desc:"De pie, pies paralelos. Levantate en puntillas tan alto como puedas. Bajá despacio. Podés hacerlo en un escalón para mayor rango de movimiento."},
+  {id:"fondos_espalda",name:"Remo Invertido",icon:"🔄",color:"#60a5fa",
+   muscles:{espalda:5,biceps:2,hombros:1},
+   xpEach:5, category:"jale",
+   desc:"Bajo una mesa o barra baja boca arriba. Jalá el pecho hacia la barra mientras mantenés el cuerpo recto. Retractá los omóplatos."},
+  {id:"diamante",     name:"Flexiones Diamante",icon:"💎",color:"#c084fc",
+   muscles:{triceps:5,pecho:2},
+   xpEach:6, category:"empuje",
+   desc:"Flexiones con manos juntas formando un rombo bajo el pecho. Mayor énfasis en tríceps. Codos pegados al cuerpo al bajar."},
+  {id:"mountain_climber",name:"Mountain Climber",icon:"🏔️",color:"#fb923c",
+   muscles:{abdomen:4,hombros:2,cuadriceps:1},
+   xpEach:3, category:"core",
+   desc:"Posición de plancha. Traé alternadamente cada rodilla hacia el pecho a ritmo rápido. Mantené las caderas bajas y el core apretado."},
+];
+
+const ROUTINES = [
+  {id:"r_basica",   name:"Rutina Básica",      diff:"Fácil",   color:"#22c55e",
+   exercises:[{id:"flexiones",reps:20},{id:"sentadillas",reps:20},{id:"abdominales",reps:20}],
+   bonusXP:30, bonusGold:5, bonusCard:1},
+  {id:"r_upper",    name:"Tren Superior",       diff:"Medio",   color:"#3b82f6",
+   exercises:[{id:"flexiones",reps:15},{id:"fondos",reps:10},{id:"dominadas",reps:8},{id:"elevaciones",reps:12}],
+   bonusXP:50, bonusGold:8, bonusCard:1},
+  {id:"r_lower",    name:"Tren Inferior",       diff:"Medio",   color:"#f59e0b",
+   exercises:[{id:"sentadillas",reps:20},{id:"zancadas",reps:16},{id:"puente_gluteo",reps:20},{id:"gemelos",reps:25}],
+   bonusXP:50, bonusGold:8, bonusCard:1},
+  {id:"r_core",     name:"Núcleo de Acero",     diff:"Medio",   color:"#f97316",
+   exercises:[{id:"plancha",reps:6},{id:"abdominales",reps:25},{id:"mountain_climber",reps:20}],
+   bonusXP:45, bonusGold:7, bonusCard:1},
+  {id:"r_full",     name:"Full Body Brutal",    diff:"Difícil", color:"#ef4444",
+   exercises:[{id:"flexiones",reps:20},{id:"sentadillas",reps:20},{id:"dominadas",reps:10},{id:"abdominales",reps:25},{id:"zancadas",reps:16}],
+   bonusXP:100, bonusGold:15, bonusCard:2},
+  {id:"r_arms",     name:"El Día de Brazos",    diff:"Medio",   color:"#8b5cf6",
+   exercises:[{id:"flexiones",reps:15},{id:"fondos",reps:12},{id:"curl_bicep",reps:15},{id:"diamante",reps:10}],
+   bonusXP:60, bonusGold:10, bonusCard:1},
+];
+
+const COLLECTIBLES = [
+  // Común
+  {id:"c01",emoji:"💪",name:"Fuerza",rarity:"comun"},{id:"c02",emoji:"🔥",name:"Llama",rarity:"comun"},
+  {id:"c03",emoji:"⚡",name:"Rayo",rarity:"comun"},{id:"c04",emoji:"🏃",name:"Corredor",rarity:"comun"},
+  {id:"c05",emoji:"💧",name:"Hidratado",rarity:"comun"},{id:"c06",emoji:"🥗",name:"Nutrición",rarity:"comun"},
+  {id:"c07",emoji:"😤",name:"Determinado",rarity:"comun"},{id:"c08",emoji:"🤸",name:"Flexibilidad",rarity:"comun"},
+  // Raro
+  {id:"c09",emoji:"🦁",name:"León",rarity:"raro"},{id:"c10",emoji:"⚔️",name:"Guerrero",rarity:"raro"},
+  {id:"c11",emoji:"🎯",name:"Precisión",rarity:"raro"},{id:"c12",emoji:"🏆",name:"Campeón",rarity:"raro"},
+  {id:"c13",emoji:"🌟",name:"Estrella",rarity:"raro"},{id:"c14",emoji:"🦅",name:"Águila",rarity:"raro"},
+  // Épico
+  {id:"c15",emoji:"🐉",name:"Dragón",rarity:"epico"},{id:"c16",emoji:"⚡🔥",name:"Tormenta",rarity:"epico"},
+  {id:"c17",emoji:"🌊",name:"Tsunami",rarity:"epico"},{id:"c18",emoji:"💎",name:"Diamante",rarity:"epico"},
+  // Legendario
+  {id:"c19",emoji:"👑",name:"Rey",rarity:"legendario"},{id:"c20",emoji:"🌌",name:"Cosmos",rarity:"legendario"},
+  {id:"c21",emoji:"⚜️",name:"Leyenda",rarity:"legendario"},
+];
+
+const RARITY_WEIGHTS = {comun:60, raro:25, epico:12, legendario:3};
+const RARITY_LABELS = {comun:"Común",raro:"Raro",epico:"Épico",legendario:"Legendario"};
+const RARITY_COLORS_MAP = {comun:"#3d4470",raro:"#3b82f6",epico:"#8b5cf6",legendario:"#f59e0b"};
+
+const SHOP_ITEMS = [
+  {id:"pack_cartas",  type:"cards",  name:"Paquete de Cartas", icon:"🃏", desc:"3 cartas aleatorias", price:20},
+  {id:"pack_premium", type:"cards",  name:"Pack Premium",      icon:"✨", desc:"5 cartas (mejor rareza)", price:50},
+  {id:"av_warrior",   type:"avatar", name:"Avatar Guerrero",   icon:"⚔️",  desc:"Avatar cosmético",  price:30, val:"⚔️"},
+  {id:"av_wizard",    type:"avatar", name:"Avatar Mago",       icon:"🧙",  desc:"Avatar cosmético",  price:30, val:"🧙"},
+  {id:"av_dragon",    type:"avatar", name:"Avatar Dragón",     icon:"🐉",  desc:"Avatar cosmético",  price:60, val:"🐉"},
+  {id:"av_ninja",     type:"avatar", name:"Avatar Ninja",      icon:"🥷",  desc:"Avatar cosmético",  price:30, val:"🥷"},
+  {id:"av_robot",     type:"avatar", name:"Avatar Robot",      icon:"🤖",  desc:"Avatar cosmético",  price:30, val:"🤖"},
+  {id:"col_cyan",     type:"color",  name:"Color Cian",        icon:"🔵",  desc:"Color de perfil",   price:20, val:"#4ee8f0"},
+  {id:"col_gold",     type:"color",  name:"Color Dorado",      icon:"🟡",  desc:"Color de perfil",   price:25, val:"#f0c040"},
+  {id:"col_purple",   type:"color",  name:"Color Violeta",     icon:"🟣",  desc:"Color de perfil",   price:25, val:"#9b6dff"},
+  {id:"col_red",      type:"color",  name:"Color Rojo",        icon:"🔴",  desc:"Color de perfil",   price:20, val:"#f87171"},
+  {id:"title_iron",   type:"title",  name:"Título: Hierro",    icon:"🔩",  desc:"Título de perfil",  price:15, val:"🔩 Cuerpo de Hierro"},
+  {id:"title_beast",  type:"title",  name:"Título: Bestia",    icon:"🦍",  desc:"Título de perfil",  price:40, val:"🦍 La Bestia"},
+  {id:"title_god",    type:"title",  name:"Título: Dios",      icon:"⚡",  desc:"Título de perfil",  price:80, val:"⚡ Semidiós del Gym"},
+];
+
+const ACHIEVEMENTS = [
+  {id:"ach_first",    name:"Primer Rep",      desc:"Hacé tu primer ejercicio",       reward:{gold:5},   icon:"🎯",
+   check:s=>s.totalReps>=1},
+  {id:"ach_10reps",   name:"En Calor",        desc:"Hacé 10 repeticiones en total",  reward:{gold:10},  icon:"🔥",
+   check:s=>s.totalReps>=10},
+  {id:"ach_100reps",  name:"Centurión",       desc:"100 repeticiones en total",      reward:{gold:20, title:"🛡️ Centurión"},icon:"💯",
+   check:s=>s.totalReps>=100},
+  {id:"ach_500reps",  name:"Medio Millar",    desc:"500 repeticiones en total",      reward:{gold:40},  icon:"⚡",
+   check:s=>s.totalReps>=500},
+  {id:"ach_1000reps", name:"El Millar",       desc:"1000 repeticiones",              reward:{gold:80, title:"🌟 El Millar"}, icon:"🏆",
+   check:s=>s.totalReps>=1000},
+  {id:"ach_lv5",      name:"A mitad de camino",desc:"Llegá al nivel 5",              reward:{gold:30},  icon:"📈",
+   check:s=>s.level>=5},
+  {id:"ach_lv10",     name:"Maestro del Gym", desc:"Llegá al nivel 10",             reward:{gold:100, title:"👑 Maestro del Gym"}, icon:"👑",
+   check:s=>s.level>=10},
+  {id:"ach_streak3",  name:"Constancia",      desc:"3 días de racha",                reward:{gold:15},  icon:"🔥",
+   check:s=>s.streak>=3},
+  {id:"ach_streak7",  name:"Semana Perfecta", desc:"7 días de racha",               reward:{gold:50, title:"🔥 Semana Perfecta"}, icon:"📅",
+   check:s=>s.streak>=7},
+  {id:"ach_routine1", name:"Rutinero",        desc:"Completá tu primera rutina",     reward:{gold:20},  icon:"📋",
+   check:s=>s.totalRoutines>=1},
+  {id:"ach_routine10",name:"Adicto a la Rutina",desc:"10 rutinas completadas",       reward:{gold:60},  icon:"💪",
+   check:s=>s.totalRoutines>=10},
+  {id:"ach_muscle_lv3",name:"Músculo Definido",desc:"Llevá cualquier músculo al nivel 3",reward:{gold:25,card:1},icon:"🦾",
+   check:s=>Object.values(s.muscles).some(m=>m.level>=3)},
+  {id:"ach_muscle_lv5",name:"Músculo Poderoso",desc:"Cualquier músculo al nivel 5",  reward:{gold:50, card:2},icon:"💥",
+   check:s=>Object.values(s.muscles).some(m=>m.level>=5)},
+  {id:"ach_all_muscles",name:"Cuerpo Completo",desc:"Entrená todos los grupos musculares",reward:{gold:75, title:"⚖️ Equilibrado"}, icon:"🧬",
+   check:s=>Object.keys(MUSCLES).every(k=>s.muscles[k]&&s.muscles[k].totalReps>0)},
+  {id:"ach_cards5",   name:"Coleccionista",   desc:"Tené 5 cartas diferentes",       reward:{gold:20},  icon:"🃏",
+   check:s=>Object.keys(s.collection).length>=5},
+  {id:"ach_cards15",  name:"Gran Colección",  desc:"Tené 15 cartas diferentes",      reward:{gold:50},  icon:"📚",
+   check:s=>Object.keys(s.collection).length>=15},
+];
+
+// ============================================================
+// STATE
+// ============================================================
+const defaultState = () => ({
+  playerName: "Guerrero",
+  level: 1,
+  xp: 0,
+  coins: 10,
+  streak: 0,
+  lastLogin: null,
+  lastRoutineDate: {},
+  totalReps: 0,
+  totalExercises: 0,
+  totalRoutines: 0,
+  muscles: Object.fromEntries(Object.keys(MUSCLES).map(k=>[k,{level:0,xp:0,totalReps:0}])),
+  exerciseLog: {},
+  collection: {},
+  unlockedAchievements: [],
+  equip: {avatar:"🧙", title:"⚔️ Novato del Gym", color:"#9b6dff"},
+  ownedItems: [],
+  ownedTitles:["⚔️ Novato del Gym"],
+  ownedAvatars:["🧙"],
+  ownedColors:["#9b6dff"],
+});
+
+let G = defaultState();
+
+function save(){localStorage.setItem("fitrpg_v2",JSON.stringify(G));}
+function load(){
+  try{const d=localStorage.getItem("fitrpg_v2");if(d){const p=JSON.parse(d);G={...defaultState(),...p};G.muscles={...defaultState().muscles,...p.muscles};}}
+  catch(e){}
+}
+
+function exportSave(){
+  const blob=new Blob([JSON.stringify(G,null,2)],{type:"application/json"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="fitrpg_save.json";a.click();
+  toast("✅ Partida exportada","#4ade80");
+}
+function importSave(input){
+  const f=input.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=e=>{
+    try{
+      const d=JSON.parse(e.target.result);
+      G={...defaultState(),...d};G.muscles={...defaultState().muscles,...d.muscles};
+      save();refreshAll();toast("✅ Partida importada","#4ade80");
+    }catch{toast("❌ Archivo inválido","#f87171");}
+  };
+  r.readAsText(f);input.value="";
+}
+
+// ============================================================
+// XP & LEVELS
+// ============================================================
+function xpForLevel(l){return XP_TABLE[Math.min(l,XP_TABLE.length-1)]||XP_TABLE[XP_TABLE.length-1]+(l-XP_TABLE.length+1)*800;}
+function muscleLevel(xp){
+  let l=0;let acc=0;
+  for(let i=0;i<XP_TABLE.length-1;i++){
+    if(xp>=acc+XP_TABLE[i+1]-XP_TABLE[i]){acc+=XP_TABLE[i+1]-XP_TABLE[i];l++;}
+    else break;
+  }
+  return l;
+}
+// Simpler: cumulative XP thresholds
+const CUM_XP=[0,100,320,700,1280,2110,3250,4770,6750,9280,12460];
+function getLevelFromXP(xp){
+  let l=0;
+  for(let i=CUM_XP.length-1;i>=0;i--){if(xp>=CUM_XP[i]){l=i;break;}}
+  return l;
+}
+function xpForNextLevel(level){return CUM_XP[level+1]||CUM_XP[CUM_XP.length-1]+800*(level-CUM_XP.length+2);}
+
+function addXP(amount){
+  const oldLevel=G.level;
+  G.xp+=amount;
+  G.level=getLevelFromXP(G.xp);
+  if(G.level>oldLevel){
+    showLevelUp(G.level);
+    giveCard();
+  }
+}
+function addMuscleXP(muscleId,amount){
+  if(!G.muscles[muscleId])return;
+  const m=G.muscles[muscleId];
+  const oldLevel=m.level;
+  m.xp+=amount;
+  m.level=getLevelFromXP(m.xp);
+  if(m.level>oldLevel) toast(`🦾 ¡${MUSCLES[muscleId].name} subió a nivel ${m.level}!`,"#9b6dff");
+}
+
+// ============================================================
+// DAILY STREAK
+// ============================================================
+function checkStreak(){
+  const today=new Date().toDateString();
+  if(G.lastLogin===today)return;
+  const yesterday=new Date(Date.now()-86400000).toDateString();
+  if(G.lastLogin===yesterday){G.streak++;}
+  else if(G.lastLogin){G.streak=1;}
+  else{G.streak=1;}
+  G.lastLogin=today;
+  G.coins+=1;
+  save();
+  setTimeout(()=>{toast(`🔥 ¡${G.streak} días de racha! +1🪙`,"#f0c040");},800);
+}
+
+// ============================================================
+// CARDS
+// ============================================================
+function rollCard(premium=false){
+  const pool=[];
+  COLLECTIBLES.forEach(c=>{
+    let w=RARITY_WEIGHTS[c.rarity];
+    if(premium&&c.rarity==="comun")w=20;
+    if(premium&&c.rarity==="raro")w=45;
+    if(premium&&c.rarity==="epico")w=28;
+    if(premium&&c.rarity==="legendario")w=7;
+    for(let i=0;i<w;i++)pool.push(c.id);
+  });
+  return pool[Math.floor(Math.random()*pool.length)];
+}
+function giveCard(premium=false){
+  const id=rollCard(premium);
+  if(!G.collection[id])G.collection[id]=0;
+  G.collection[id]++;
+  save();
+  showCardReveal(id);
+  return id;
+}
+
+// ============================================================
+// ACHIEVEMENTS
+// ============================================================
+function checkAchievements(){
+  ACHIEVEMENTS.forEach(ach=>{
+    if(G.unlockedAchievements.includes(ach.id))return;
+    if(ach.check(G)){
+      G.unlockedAchievements.push(ach.id);
+      if(ach.reward.gold){G.coins+=ach.reward.gold;toast(`🏆 Logro: ${ach.name} +${ach.reward.gold}🪙`,"#f0c040");}
+      if(ach.reward.title){G.ownedTitles.push(ach.reward.title);toast(`📜 Nuevo título: ${ach.reward.title}`,"#9b6dff");}
+      if(ach.reward.card){for(let i=0;i<ach.reward.card;i++)giveCard();}
+      save();
+    }
+  });
+}
+
+// ============================================================
+// EXERCISE LOG
+// ============================================================
+function doExercise(exId, reps){
+  if(reps<=0)return;
+  const ex=EXERCISES.find(e=>e.id===exId);
+  if(!ex)return;
+  const totalXP=ex.xpEach*reps;
+  addXP(totalXP);
+  Object.entries(ex.muscles).forEach(([mId,factor])=>{
+    addMuscleXP(mId,reps*factor);
+    G.muscles[mId].totalReps+=reps;
+  });
+  G.totalReps+=reps;
+  G.totalExercises++;
+  if(!G.exerciseLog[exId])G.exerciseLog[exId]=0;
+  G.exerciseLog[exId]+=reps;
+  // Random card chance (10%)
+  if(Math.random()<0.10)giveCard();
+  save();
+  checkAchievements();
+  refreshAll();
+  toast(`+${totalXP} XP 💪`,"#4ee8f0");
+}
+
+// ============================================================
+// ROUTINES
+// ============================================================
+function canDoRoutine(rId){
+  const today=new Date().toDateString();
+  return G.lastRoutineDate[rId]!==today;
+}
+function doRoutine(rId){
+  if(!canDoRoutine(rId)){toast("⏳ Ya completaste esta rutina hoy","#f0c040");return;}
+  const rut=ROUTINES.find(r=>r.id===rId);
+  if(!rut)return;
+  rut.exercises.forEach(e=>{
+    const ex=EXERCISES.find(x=>x.id===e.id);
+    if(!ex)return;
+    Object.entries(ex.muscles).forEach(([mId,f])=>{
+      addMuscleXP(mId,e.reps*f);
+      G.muscles[mId].totalReps+=e.reps;
+    });
+    G.totalReps+=e.reps;
+    if(!G.exerciseLog[e.id])G.exerciseLog[e.id]=0;
+    G.exerciseLog[e.id]+=e.reps;
+  });
+  addXP(rut.bonusXP);
+  G.coins+=rut.bonusGold;
+  G.totalRoutines++;
+  for(let i=0;i<rut.bonusCard;i++)giveCard();
+  G.lastRoutineDate[rId]=new Date().toDateString();
+  G.totalExercises++;
+  save();
+  checkAchievements();
+  refreshAll();
+  toast(`✅ Rutina completada! +${rut.bonusXP}XP +${rut.bonusGold}🪙`,"#4ade80");
+}
+
+// ============================================================
+// SHOP
+// ============================================================
+function buyItem(itemId){
+  const item=SHOP_ITEMS.find(i=>i.id===itemId);
+  if(!item)return;
+  if(G.coins<item.price){toast("❌ Monedas insuficientes","#f87171");return;}
+  G.coins-=item.price;
+  if(item.type==="cards"){
+    const n=itemId==="pack_premium"?5:3;
+    for(let i=0;i<n;i++)giveCard(itemId==="pack_premium");
+  }else if(item.type==="avatar"){
+    if(!G.ownedAvatars.includes(item.val))G.ownedAvatars.push(item.val);
+    G.equip.avatar=item.val;
+  }else if(item.type==="color"){
+    if(!G.ownedColors.includes(item.val))G.ownedColors.push(item.val);
+    G.equip.color=item.val;
+  }else if(item.type==="title"){
+    if(!G.ownedTitles.includes(item.val))G.ownedTitles.push(item.val);
+    G.equip.title=item.val;
+  }
+  if(!G.ownedItems.includes(itemId))G.ownedItems.push(itemId);
+  save();refreshAll();
+  toast(`✅ ¡${item.name} comprado!`,"#4ade80");
+}
+
+// ============================================================
+// UI HELPERS
+// ============================================================
+function toast(msg,color="#4ee8f0"){
+  const el=document.createElement("div");
+  el.className="toast";el.style.borderLeftColor=color;el.style.color=color;
+  el.innerHTML=msg;
+  document.getElementById("toast-container").appendChild(el);
+  setTimeout(()=>el.remove(),3200);
+}
+
+function showModal(html){
+  const bd=document.createElement("div");bd.className="modal-backdrop";
+  bd.innerHTML=`<div class="modal">${html}<button class="modal-close" onclick="this.closest('.modal-backdrop').remove()">✕</button></div>`;
+  bd.addEventListener("click",e=>{if(e.target===bd)bd.remove();});
+  document.getElementById("modal-container").appendChild(bd);
+}
+
+function showLevelUp(lv){
+  showModal(`<div class="levelup-modal">
+    <div class="levelup-orb" style="background:linear-gradient(135deg,#9b6dff,#4ee8f0)">⬆</div>
+    <div style="font-family:'Cinzel Decorative',serif;font-size:18px;color:var(--gold);margin-bottom:8px">¡NIVEL ${lv}!</div>
+    <div style="font-size:13px;color:var(--text2)">¡Seguí así, estás forjando tu cuerpo!</div>
+    <div style="margin-top:12px;font-size:20px">🎉✨🎊</div>
+  </div>`);
+}
+
+function showCardReveal(cardId){
+  const card=COLLECTIBLES.find(c=>c.id===cardId);if(!card)return;
+  const rc=RARITY_COLORS_MAP[card.rarity];
+  showModal(`<div style="text-align:center">
+    <div style="font-family:'Cinzel',serif;font-size:14px;margin-bottom:16px;color:var(--text2)">¡Nueva carta!</div>
+    <div class="card-reveal rarity-${card.rarity}" style="border-color:${rc};box-shadow:0 0 20px ${rc}40">
+      <div class="card-emoji">${card.emoji}</div>
+      <div class="card-rarity" style="color:${rc}">${RARITY_LABELS[card.rarity]}</div>
+    </div>
+    <div style="font-family:'Cinzel',serif;font-size:16px;margin-top:8px">${card.name}</div>
+    <div style="font-size:11px;color:${rc};margin-top:4px;font-weight:700">${RARITY_LABELS[card.rarity].toUpperCase()}</div>
+  </div>`);
+}
+
+function getMuscleColor(level){
+  if(level===0)return "var(--muscle-gray)";
+  if(level===1)return "#1a4a2e";
+  if(level===2)return "#22c55e";
+  if(level===3)return "#3b82f6";
+  if(level===4)return "#7c3aed";
+  if(level===5)return "#be185d";
+  if(level===6)return "#dc2626";
+  return "#ca8a04";
+}
+function getMuscleClass(level){return `m-lv${Math.min(level,7)}`;}
+
+// ============================================================
+// RENDER FUNCTIONS
+// ============================================================
+function renderPerfil(){
+  const nxt=xpForNextLevel(G.level);
+  const pct=Math.min(100,Math.round(G.xp/nxt*100));
+  document.getElementById("p-name").textContent=G.playerName;
+  document.getElementById("p-title").textContent=G.equip.title;
+  document.getElementById("p-level").textContent=G.level;
+  document.getElementById("p-xp-txt").textContent=`${G.xp} / ${nxt}`;
+  document.getElementById("p-xp-bar").style.width=pct+"%";
+  document.getElementById("p-coins").textContent=G.coins;
+  document.getElementById("p-streak").textContent=G.streak;
+  document.getElementById("avatar-display").textContent=G.equip.avatar;
+  document.getElementById("equip-avatar").textContent=G.equip.avatar;
+  document.getElementById("equip-title").textContent=G.equip.title;
+  document.getElementById("equip-color").style.background=G.equip.color;
+
+  // Snapshot
+  document.getElementById("snap-level").textContent=G.level;
+  document.getElementById("snap-streak").textContent=G.streak+"🔥";
+  document.getElementById("snap-exercises").textContent=G.totalExercises;
+  document.getElementById("snap-total-reps").textContent=G.totalReps;
+  // Best muscle
+  let bestM=null,bestL=0;
+  Object.entries(G.muscles).forEach(([k,v])=>{if(v.level>bestL){bestL=v.level;bestM=k;}});
+  document.getElementById("snap-best-muscle").textContent=bestM?MUSCLES[bestM].name+"(Nv."+bestL+")":"—";
+  // Last 5 cards
+  const sc=document.getElementById("snap-cards");sc.innerHTML="";
+  Object.entries(G.collection).slice(-5).forEach(([id])=>{
+    const c=COLLECTIBLES.find(x=>x.id===id);if(!c)return;
+    const d=document.createElement("div");
+    d.className=`card-mini rarity-${c.rarity}`;d.style.borderColor=RARITY_COLORS_MAP[c.rarity];
+    d.textContent=c.emoji;sc.appendChild(d);
+  });
+}
+
+function renderBodyMap(){
+  // Apply colors to SVG muscle zones
+  document.querySelectorAll(".muscle-zone").forEach(el=>{
+    const mId=el.getAttribute("data-muscle");
+    if(!mId||!G.muscles[mId])return;
+    const lv=G.muscles[mId].level;
+    // Remove old classes
+    for(let i=0;i<=7;i++)el.classList.remove("m-lv"+i);
+    el.classList.add(getMuscleClass(lv));
+  });
+
+  // Legend
+  const lg=document.getElementById("muscles-legend");lg.innerHTML="";
+  Object.entries(MUSCLES).forEach(([k,v])=>{
+    const lv=G.muscles[k]?G.muscles[k].level:0;
+    const color=getMuscleColor(lv);
+    const div=document.createElement("div");div.className="legend-item";
+    div.innerHTML=`<div class="legend-dot" style="background:${color}"></div><span style="color:var(--text2)">${v.name}</span><span style="color:var(--gold);font-weight:700;margin-left:auto">Nv.${lv}</span>`;
+    lg.appendChild(div);
+  });
+
+  // Tooltip events
+  const tooltip=document.getElementById("muscle-tooltip");
+  document.querySelectorAll(".muscle-zone").forEach(el=>{
+    el.addEventListener("click",(e)=>{
+      const mId=el.getAttribute("data-muscle");
+      if(!mId||!MUSCLES[mId])return;
+      const m=G.muscles[mId];const lv=m.level;
+      const nxt=xpForNextLevel(lv);
+      const pct=Math.min(100,Math.round(m.xp/nxt*100));
+      document.getElementById("tt-name").textContent=MUSCLES[mId].name;
+      document.getElementById("tt-desc").textContent=MUSCLES[mId].desc;
+      document.getElementById("tt-level").textContent=lv;
+      document.getElementById("tt-xp").textContent=m.xp;
+      document.getElementById("tt-xpmax").textContent=nxt;
+      document.getElementById("tt-bar").style.width=pct+"%";
+      document.getElementById("tt-bar").style.background=getMuscleColor(lv);
+      tooltip.style.display="block";
+      // Position
+      const rect=el.getBoundingClientRect();
+      tooltip.style.left=Math.min(rect.right+8,window.innerWidth-180)+"px";
+      tooltip.style.top=Math.min(rect.top,window.innerHeight-130)+"px";
+      e.stopPropagation();
+    });
+  });
+  document.addEventListener("click",()=>{tooltip.style.display="none";},{passive:true});
+}
+
+let activeFilter="todos";
+function renderEjercicios(){
+  // Filters
+  const fr=document.getElementById("filter-row");fr.innerHTML="";
+  const cats=["todos","empuje","jale","piernas","core"];
+  cats.forEach(c=>{
+    const btn=document.createElement("button");
+    btn.className="filter-chip"+(c===activeFilter?" active":"");
+    btn.textContent=c.charAt(0).toUpperCase()+c.slice(1);
+    btn.onclick=()=>{activeFilter=c;renderEjercicios();};
+    fr.appendChild(btn);
+  });
+
+  const list=document.getElementById("exercise-list");list.innerHTML="";
+  EXERCISES.filter(e=>activeFilter==="todos"||e.category===activeFilter).forEach(ex=>{
+    const div=document.createElement("div");div.className="ex-card";
+    const totalReps=G.exerciseLog[ex.id]||0;
+    const muscleInfo=Object.entries(ex.muscles).map(([m,f])=>`<span class="ex-tag" style="background:rgba(78,232,240,.1);color:var(--cyan)">${MUSCLES[m]?.name||m} +${f}xp/rep</span>`).join("");
+    const noteHtml=ex.note?`<span style="color:var(--gold);font-size:11px">⚠️ ${ex.note}</span>`:"";
+    div.innerHTML=`
+      <div class="ex-header" onclick="this.parentElement.classList.toggle('open')">
+        <div class="ex-icon" style="background:${ex.color}22;color:${ex.color}">${ex.icon}</div>
+        <div class="ex-info">
+          <div class="ex-name">${ex.name}</div>
+          <div class="ex-tags">${muscleInfo}</div>
+        </div>
+        <div style="text-align:right;margin-right:8px">
+          <div style="font-size:10px;color:var(--text3)">Total</div>
+          <div style="font-size:13px;font-weight:700;color:var(--text2)">${totalReps}</div>
+        </div>
+        <div class="ex-expand">▼</div>
+      </div>
+      <div class="ex-body">
+        <div class="ex-desc">${ex.desc}</div>
+        ${noteHtml?noteHtml+"<br><br>":""}
+        <div class="ex-rewards">
+          <div class="reward-chip">⚡ ${ex.xpEach} XP por rep (cuenta)</div>
+          ${Object.entries(ex.muscles).map(([m,f])=>`<div class="reward-chip" style="color:var(--cyan)">🦾 ${f} XP/rep (${MUSCLES[m]?.name||m})</div>`).join("")}
+        </div>
+        <div class="rep-input-row">
+          <input class="rep-input" type="number" min="1" placeholder="Reps" id="reps-${ex.id}">
+          <button class="btn btn-gold" onclick="submitExercise('${ex.id}')">+ Registrar</button>
+        </div>
+      </div>`;
+    list.appendChild(div);
+  });
+}
+
+function submitExercise(exId){
+  const input=document.getElementById("reps-"+exId);
+  const reps=parseInt(input.value);
+  if(isNaN(reps)||reps<=0){toast("Ingresá un número válido","#f87171");return;}
+  doExercise(exId,reps);
+  input.value="";
+}
+
+function renderRutinas(){
+  const list=document.getElementById("rutinas-list");list.innerHTML="";
+  ROUTINES.forEach(rut=>{
+    const done=!canDoRoutine(rut.id);
+    const div=document.createElement("div");
+    div.className="rutina-card"+(done?" completed":"");
+    const exRows=rut.exercises.map(e=>{
+      const ex=EXERCISES.find(x=>x.id===e.id);
+      return `<div class="rutina-ex-row">${ex?ex.icon:"•"} ${ex?ex.name:e.id}: <b>${e.reps}</b> ${ex?.note?"("+ex.note+")":""}</div>`;
+    }).join("");
+    const diffColors={Fácil:"#22c55e",Medio:"#f59e0b",Difícil:"#ef4444"};
+    div.innerHTML=`
+      <div class="rutina-header">
+        <div>
+          <div class="rutina-name">${rut.name}</div>
+          <span class="rutina-diff" style="background:${diffColors[rut.diff]}22;color:${diffColors[rut.diff]}">${rut.diff}</span>
+        </div>
+        ${done?`<span style="color:var(--green);font-size:20px">✅</span>`:`<button class="btn btn-gold btn-sm" onclick="doRoutine('${rut.id}')">Completar</button>`}
+      </div>
+      <div class="rutina-exercises">${exRows}</div>
+      <div class="rutina-rewards">
+        <div class="reward-chip">⚡ +${rut.bonusXP} XP</div>
+        <div class="reward-chip" style="color:var(--gold)">🪙 +${rut.bonusGold}</div>
+        <div class="reward-chip" style="color:var(--purple)">🃏 x${rut.bonusCard} carta${rut.bonusCard>1?"s":""}</div>
+      </div>
+      ${done?`<div class="countdown">⏳ Disponible mañana</div>`:""}`;
+    list.appendChild(div);
+  });
+}
+
+let activeShopTab="coleccion";
+function switchTab(t){
+  activeShopTab=t;
+  document.querySelectorAll(".tab").forEach((el,i)=>{
+    const tabs=["coleccion","tienda","logros"];
+    el.classList.toggle("active",tabs[i]===t);
+  });
+  document.querySelectorAll(".tab-content").forEach(el=>el.classList.remove("active"));
+  document.getElementById("tab-"+t)?.classList.add("active");
+  if(t==="coleccion")renderColeccion();
+  else if(t==="tienda")renderTienda();
+  else if(t==="logros")renderLogros();
+}
+
+function renderColeccion(){
+  document.getElementById("coins-col").textContent=G.coins;
+  document.getElementById("card-total").textContent=COLLECTIBLES.length;
+  const owned=Object.keys(G.collection).length;
+  document.getElementById("card-count").textContent=owned;
+  const grid=document.getElementById("cards-grid");grid.innerHTML="";
+  COLLECTIBLES.forEach(c=>{
+    const count=G.collection[c.id]||0;
+    const div=document.createElement("div");
+    div.className=`coll-card rarity-${c.rarity}`+(count===0?" locked":"");
+    div.style.borderColor=count>0?RARITY_COLORS_MAP[c.rarity]:"transparent";
+    div.innerHTML=`<span>${c.emoji}</span>${count>1?`<span class="coll-count">x${count}</span>`:""}`;
+    div.title=`${c.name} (${RARITY_LABELS[c.rarity]})`;
+    div.onclick=()=>{
+      if(count>0)showModal(`<div style="text-align:center">
+        <div class="card-reveal rarity-${c.rarity}" style="border-color:${RARITY_COLORS_MAP[c.rarity]}">
+          <div class="card-emoji">${c.emoji}</div>
+          <div class="card-rarity" style="color:${RARITY_COLORS_MAP[c.rarity]}">${RARITY_LABELS[c.rarity]}</div>
+        </div>
+        <div style="font-family:'Cinzel',serif;font-size:16px;margin-top:8px">${c.name}</div>
+        <div style="font-size:12px;color:var(--text2);margin-top:4px">Tienes: ${count} copia${count>1?"s":""}</div>
+      </div>`);
+    };
+    grid.appendChild(div);
+  });
+}
+
+function renderTienda(){
+  document.getElementById("coins-shop").textContent=G.coins;
+  const grid=document.getElementById("shop-grid");grid.innerHTML="";
+  SHOP_ITEMS.forEach(item=>{
+    const canAfford=G.coins>=item.price;
+    const div=document.createElement("div");div.className="shop-item";
+    div.innerHTML=`
+      <span class="item-preview">${item.icon}</span>
+      <div class="item-name">${item.name}</div>
+      <div class="item-desc">${item.desc}</div>
+      <div class="item-price">🪙 ${item.price}</div>
+      <button class="btn btn-gold btn-sm" style="margin-top:8px;width:100%;${!canAfford?'opacity:.4;pointer-events:none':''}" onclick="buyItem('${item.id}')">Comprar</button>`;
+    grid.appendChild(div);
+  });
+}
+
+function renderLogros(){
+  const list=document.getElementById("logros-list");list.innerHTML="";
+  ACHIEVEMENTS.forEach(ach=>{
+    const done=G.unlockedAchievements.includes(ach.id);
+    const div=document.createElement("div");div.className="logro-item"+(done?" done":"");
+    const rewardStr=Object.entries(ach.reward).map(([k,v])=>`${k==="gold"?"🪙"+v:k==="title"?"📜"+v:k==="card"?"🃏x"+v:""}`).join(" ");
+    div.innerHTML=`
+      <div class="logro-icon">${ach.icon}</div>
+      <div class="logro-info">
+        <div class="logro-name">${ach.name}</div>
+        <div class="logro-desc">${ach.desc}</div>
+        <div class="logro-reward">${rewardStr}</div>
+      </div>
+      ${done?`<div class="logro-check">✓</div>`:`<div style="width:24px;height:24px;border-radius:50%;border:2px solid var(--border);flex-shrink:0"></div>`}`;
+    list.appendChild(div);
+  });
+}
+
+function renderStats(){
+  const sg=document.getElementById("stats-general");sg.innerHTML="";
+  const stats=[
+    {label:"Nivel",val:G.level,color:"var(--purple)"},
+    {label:"XP Total",val:G.xp,color:"var(--cyan)"},
+    {label:"Reps Totales",val:G.totalReps,color:"var(--green)"},
+    {label:"Monedas",val:G.coins,color:"var(--gold)"},
+    {label:"Racha",val:G.streak+"🔥",color:"var(--gold)"},
+    {label:"Rutinas",val:G.totalRoutines,color:"var(--pink)"},
+    {label:"Ejercicios",val:G.totalExercises,color:"var(--cyan)"},
+    {label:"Cartas",val:Object.keys(G.collection).length,color:"var(--purple)"},
+  ];
+  stats.forEach(s=>{
+    const d=document.createElement("div");d.className="stat-box";
+    d.innerHTML=`<div class="stat-val" style="color:${s.color}">${s.val}</div><div class="stat-label">${s.label}</div>`;
+    sg.appendChild(d);
+  });
+
+  const ml=document.getElementById("muscle-stats-list");ml.innerHTML="";
+  Object.entries(MUSCLES).forEach(([k,v])=>{
+    const m=G.muscles[k];const lv=m.level;
+    const nxt=xpForNextLevel(lv);const pct=Math.min(100,Math.round(m.xp/nxt*100));
+    const color=getMuscleColor(lv);
+    const div=document.createElement("div");div.className="muscle-stat-row";
+    div.innerHTML=`
+      <div class="muscle-stat-name">${v.name}</div>
+      <div class="muscle-stat-bar-wrap">
+        <div class="xp-bar-wrap"><div class="xp-bar-fill" style="width:${pct}%;background:${color}"></div></div>
+        <div style="font-size:9px;color:var(--text3);margin-top:2px">${m.xp} / ${nxt} XP • ${m.totalReps} reps</div>
+      </div>
+      <div class="muscle-stat-level" style="color:${color}">Nv.${lv}</div>`;
+    ml.appendChild(div);
+  });
+
+  const el=document.getElementById("exercise-stats-list");el.innerHTML="";
+  const sorted=Object.entries(G.exerciseLog).sort((a,b)=>b[1]-a[1]);
+  if(sorted.length===0){el.innerHTML='<div class="empty-state">Aún no registraste ejercicios</div>';return;}
+  sorted.forEach(([id,reps])=>{
+    const ex=EXERCISES.find(e=>e.id===id);
+    const d=document.createElement("div");
+    d.style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)";
+    d.innerHTML=`<span>${ex?ex.icon:"•"} ${ex?ex.name:id}</span><span style="font-weight:700;color:var(--cyan)">${reps} reps</span>`;
+    el.appendChild(d);
+  });
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function navigate(page){
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.querySelectorAll(".nav-btn").forEach(b=>b.classList.remove("active"));
+  document.getElementById("page-"+page)?.classList.add("active");
+  document.getElementById("nb-"+page)?.classList.add("active");
+  if(page==="cuerpo")renderBodyMap();
+  else if(page==="ejercicios")renderEjercicios();
+  else if(page==="rutinas")renderRutinas();
+  else if(page==="tienda"){renderColeccion();renderTienda();renderLogros();}
+  else if(page==="stats")renderStats();
+  else if(page==="perfil")renderPerfil();
+}
+
+function refreshAll(){
+  renderPerfil();
+  renderBodyMap();
+  renderEjercicios();
+  renderRutinas();
+  renderColeccion();
+  renderTienda();
+  renderLogros();
+  renderStats();
+}
+
+// ============================================================
+// INIT
+// ============================================================
+load();
+checkStreak();
+refreshAll();
+navigate("perfil");
+</script>
+</body>
+</html>
