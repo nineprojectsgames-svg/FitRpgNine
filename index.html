@@ -11,6 +11,9 @@
 <link rel="manifest" id="pwa-manifest">
 <title>FitRPG — Forja tu Cuerpo</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@400;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+
 <style>
 :root{
   --bg-deep:#0a0b14;--bg-mid:#111422;--bg-card:#161929;--bg-card2:#1c2035;
@@ -195,6 +198,15 @@ body{font-family:'Nunito',sans-serif;color:var(--text);display:flex;flex-directi
 .goal-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
 .goal-lbl{font-size:11px;color:var(--text2);width:80px;flex-shrink:0;}
 .goal-pct{font-size:11px;color:var(--cyan);font-weight:700;width:32px;text-align:right;flex-shrink:0;}
+
+.tier-badge {
+  display: inline-block;
+  filter: drop-shadow(0 0 2px rgba(240,192,64,0.5));
+  transition: transform 0.2s ease;
+}
+.tier-badge:hover {
+  transform: scale(1.1);
+}
 </style>
 </head>
 <body>
@@ -207,6 +219,7 @@ body{font-family:'Nunito',sans-serif;color:var(--text);display:flex;flex-directi
     <button class="btn btn-ghost btn-sm" onclick="document.getElementById('imp').click()">⬇ Importar</button>
     <input type="file" id="imp" accept=".json" style="display:none" onchange="importSave(this)">
     <button class="btn btn-danger btn-sm" onclick="confirmReset()">🗑 Reset</button>
+    <button class="btn btn-ghost btn-sm" id="toggle-sound-btn" onclick="toggleSound()">🔊 Sonido ON</button>
   </div>
 
   <div class="ph">
@@ -229,6 +242,7 @@ body{font-family:'Nunito',sans-serif;color:var(--text);display:flex;flex-directi
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
         <div style="font-size:13px;font-weight:700;color:var(--gold)">🪙 <span id="p-coins">0</span></div>
         <div class="streak-pill">🔥 <span id="p-streak">0</span> días</div>
+        <span id="tier-badge" class="tier-badge" style="margin-left: 8px; font-size: 1.3rem;"></span>
       </div>
     </div>
   </div>
@@ -245,6 +259,7 @@ body{font-family:'Nunito',sans-serif;color:var(--text);display:flex;flex-directi
     <div style="margin-top:8px;font-size:10px;color:var(--text2);text-align:center">💪 Músculo líder: <span id="sn-best" style="color:var(--cyan);font-weight:700">—</span></div>
     <div style="margin-top:8px;font-size:10px;color:var(--text2);text-align:center">⚠️ Más descuidado: <span id="sn-worst" style="color:var(--red);font-weight:700">—</span></div>
     <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:8px;justify-content:center" id="sn-cards"></div>
+    <button class="btn btn-gold btn-sm" style="margin-top:12px; width:100%;" onclick="shareProgressImage()">📸 Compartir progreso</button>
     <div style="margin-top:8px;text-align:center;font-size:9px;color:var(--text3)">⚔️ FitRPG — Forja tu Cuerpo ⚔️</div>
   </div>
 
@@ -437,6 +452,14 @@ body{font-family:'Nunito',sans-serif;color:var(--text);display:flex;flex-directi
     <div id="muscle-warns"></div>
     <div id="msl-list"></div>
   </div>
+<div class="card">
+  <div class="card-title">🏋️ Ranking de músculos</div>
+  <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+    <button id="rank-by-level" class="btn btn-ghost btn-sm" style="flex:1">Por nivel</button>
+    <button id="rank-by-reps" class="btn btn-ghost btn-sm" style="flex:1">Por reps totales</button>
+  </div>
+  <div id="muscle-ranking-list"></div>
+</div>
   <div class="card">
     <div class="card-title">Actividad — últimas 13 semanas</div>
     <div class="act-grid" id="act-grid"></div>
@@ -625,13 +648,15 @@ const DEF=()=>({
   name:"Guerrero",level:1,xp:0,coins:10,streak:0,lastLogin:null,
   lastRut:{},totalReps:0,totalEx:0,totalRoutines:0,
   muscles:Object.fromEntries(Object.keys(MUSCLES).map(k=>[k,{lv:0,xp:0,reps:0}])),
-  exLog:{},col:{},
+  exLog:{}, exMax:{}, exDays:{},
+  col:{},
   achievements:[],
   equip:{av:"🧙",ti:"⚔️ Novato del Gym",co:"#9b6dff"},
   ownAv:["🧙"],ownTi:["⚔️ Novato del Gym"],ownCo:["#9b6dff"],ownItems:[],
   actLog:{},
   goals:[{muscle:"cuadriceps",daily:30},{muscle:"pecho",daily:20}],
   todayReps:{},
+  soundEnabled: true,   // <-- Línea añadida
 });
 
 let G=DEF();
@@ -641,8 +666,11 @@ function ld(){
   try{
     const d=localStorage.getItem("fitrpg3");
     if(d){const p=JSON.parse(d);G={...DEF(),...p};G.muscles={...DEF().muscles};
+     if (!G.exMax) G.exMax = {};
+     if (!G.exDays) G.exDays = {};
       if(p.muscles)Object.keys(p.muscles).forEach(k=>{if(G.muscles[k])G.muscles[k]={...G.muscles[k],...p.muscles[k]};});
       G.goals=p.goals||G.goals;G.actLog=p.actLog||{};G.todayReps=p.todayReps||{};
+      if (p.soundEnabled !== undefined) G.soundEnabled = p.soundEnabled;   // <-- Línea añadida
     }
   }catch(e){}
 }
@@ -683,7 +711,7 @@ function saveName(){G.name=document.getElementById("name-in").value||"Guerrero";
 // ================================================================
 function addXP(n){
   const ol=G.level;G.xp+=n;G.level=getLvl(G.xp);
-  if(G.level>ol){showLevelUp(G.level);giveCard();}
+  if(G.level>ol){showLevelUp(G.level);giveCard(); playSound('levelup');}
 }
 function addMuscleXP(mid,n){
   if(!G.muscles[mid])return;
@@ -719,7 +747,7 @@ function rollCard(prem=false){
 }
 function giveCard(prem=false){
   const id=rollCard(prem);
-  if(!G.col[id])G.col[id]=0;G.col[id]++;sv();showCardReveal(id);return id;
+  if(!G.col[id])G.col[id]=0;G.col[id]++;sv();showCardReveal(id); playSound('card'); return id;
 }
 
 // ================================================================
@@ -748,6 +776,15 @@ function doExercise(exId,reps){
   Object.entries(ex.muscles).forEach(([m,f])=>{addMuscleXP(m,reps*f);G.muscles[m].reps+=reps;});
   G.totalReps+=reps;G.totalEx++;
   if(!G.exLog[exId])G.exLog[exId]=0;G.exLog[exId]+=reps;
+  // Actualizar máximo por sesión
+  if (!G.exMax[exId]) G.exMax[exId] = 0;
+  if (reps > G.exMax[exId]) G.exMax[exId] = reps;
+  // Actualizar días en que se hizo este ejercicio (usando fecha actual)
+  const todayStr = new Date().toISOString().split('T')[0];
+  if (!G.exDays[exId]) G.exDays[exId] = {};
+  if (!G.exDays[exId][todayStr]) {
+    G.exDays[exId][todayStr] = true;
+  }
   if(!G.todayReps[exId])G.todayReps[exId]=0;G.todayReps[exId]+=reps;
   // Activity log
   const td=new Date().toISOString().split("T")[0];
@@ -755,6 +792,7 @@ function doExercise(exId,reps){
   if(Math.random()<0.1)giveCard();
   sv();checkAch();refreshAll();
   toast(`+${txp} XP 💪`,"#4ee8f0");
+  playSound('xp');
 }
 
 function doRoutine(rId){
@@ -774,6 +812,7 @@ function doRoutine(rId){
   for(let i=0;i<rut.bC;i++)giveCard();
   G.lastRut[rId]=today;sv();checkAch();refreshAll();
   toast(`✅ Rutina: +${rut.bXP}XP +${rut.bG}🪙`,"#4ade80");
+  playSound('complete');
 }
 
 function buyItem(iid){
@@ -887,12 +926,40 @@ function renderBodyMap(){
   });
 }
 
+// Insignias por nivel (cada 5 niveles hasta 50)
+function getTierBadge(level) {
+  const tiers = [
+    { min: 5,  badge: "🥉" },   // Bronce
+    { min: 10, badge: "🥈" },   // Plata
+    { min: 15, badge: "🥇" },   // Oro
+    { min: 20, badge: "🏅" },   // Medalla
+    { min: 25, badge: "🏆" },   // Trofeo
+    { min: 30, badge: "⭐" },    // Estrella
+    { min: 35, badge: "⭐⭐" },
+    { min: 40, badge: "⭐⭐⭐" },
+    { min: 45, badge: "⭐⭐⭐⭐" },
+    { min: 50, badge: "⭐⭐⭐⭐⭐" }
+  ];
+  // Recorremos de mayor a menor
+  for (let i = tiers.length - 1; i >= 0; i--) {
+    if (level >= tiers[i].min) return tiers[i].badge;
+  }
+  return ""; // Nivel <5 → sin insignia
+}
+
 // ================================================================
 // RENDER PERFIL
 // ================================================================
 function renderPerfil(){
   const nx=nxtXP(G.level);const pct=Math.min(100,Math.round(G.xp/nx*100));
   document.getElementById("name-in").value=G.name;
+  // Insignia por nivel
+  const badgeSpan = document.getElementById("tier-badge");
+  if (badgeSpan) {
+    const badge = getTierBadge(G.level);
+    badgeSpan.textContent = badge;
+    badgeSpan.title = badge ? `Insignia de nivel ${G.level}` : "Sigue entrenando para ganar insignias";
+  }
   document.getElementById("p-title").textContent=G.equip.ti;
   document.getElementById("p-lv").textContent=G.level;
   document.getElementById("p-xp-txt").textContent=`${G.xp}/${nx}`;
@@ -1096,6 +1163,8 @@ function renderStats(){
     d.innerHTML=`<div class="stat-val" style="color:${s.c}">${s.v}</div><div class="stat-lbl">${s.l}</div>`;
     sg.appendChild(d);
   });
+  // Ranking de músculos se renderiza aparte, al final de la función
+  renderMuscleRanking('level');
 
   // Muscle warnings
   const mw=document.getElementById("muscle-warns");mw.innerHTML="";
@@ -1135,16 +1204,197 @@ function renderStats(){
     cell.title=key+": "+val+" reps";ag.appendChild(cell);
   }
 
-  // Exercise log
-  const el=document.getElementById("ex-stats");el.innerHTML="";
+  // Exercise stats mejoradas
+  const el=document.getElementById("ex-stats"); el.innerHTML="";
   const sorted=Object.entries(G.exLog).sort((a,b)=>b[1]-a[1]);
-  if(!sorted.length){el.innerHTML='<div style="text-align:center;padding:20px;color:var(--text3);font-size:12px">Aún no registraste ejercicios</div>';return;}
+  if(!sorted.length){
+    el.innerHTML='<div style="text-align:center;padding:20px;color:var(--text3);font-size:12px">Aún no registraste ejercicios</div>';
+    return;
+  }
   sorted.forEach(([id,reps])=>{
     const ex=EXERCISES.find(e=>e.id===id);
-    const d=document.createElement("div");d.style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px";
-    d.innerHTML=`<span>${ex?ex.icon:"•"} ${ex?ex.name:id}</span><span style="font-weight:700;color:var(--cyan)">${reps} reps</span>`;
+    const maxReps = G.exMax[id] || 0;
+    const daysCount = G.exDays[id] ? Object.keys(G.exDays[id]).length : 0;
+    const avgPerDay = daysCount > 0 ? Math.round(reps / daysCount) : 0;
+    const d=document.createElement("div");
+    d.style="background:var(--bg-card2); border-radius:12px; padding:10px; margin-bottom:8px; cursor:pointer; transition:all 0.1s";
+    d.innerHTML=`
+      <div style="display:flex; align-items:center; justify-content:space-between;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="font-size:20px;">${ex?ex.icon:"💪"}</span>
+          <div>
+            <div style="font-weight:800; font-size:14px;">${ex?ex.name:id}</div>
+            <div style="font-size:10px; color:var(--text2);">Total: ${reps} reps</div>
+          </div>
+        </div>
+        <div style="font-size:20px; color:var(--cyan);">▼</div>
+      </div>
+      <div class="ex-detail-stats" style="display:none; margin-top:10px; border-top:1px solid var(--border); padding-top:8px;">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
+          <div style="background:rgba(0,0,0,0.2); border-radius:8px; padding:6px; text-align:center;">
+            <div style="font-size:10px; color:var(--text3);">Récord por sesión</div>
+            <div style="font-size:16px; font-weight:700; color:var(--gold);">${maxReps}</div>
+          </div>
+          <div style="background:rgba(0,0,0,0.2); border-radius:8px; padding:6px; text-align:center;">
+            <div style="font-size:10px; color:var(--text3);">Promedio por día</div>
+            <div style="font-size:16px; font-weight:700; color:var(--cyan);">${avgPerDay}</div>
+          </div>
+          <div style="background:rgba(0,0,0,0.2); border-radius:8px; padding:6px; text-align:center;">
+            <div style="font-size:10px; color:var(--text3);">Días entrenados</div>
+            <div style="font-size:16px; font-weight:700; color:var(--purple);">${daysCount}</div>
+          </div>
+          <div style="background:rgba(0,0,0,0.2); border-radius:8px; padding:6px; text-align:center;">
+            <div style="font-size:10px; color:var(--text3);">XP por rep</div>
+            <div style="font-size:16px; font-weight:700; color:var(--green);">${ex?ex.xp:0}</div>
+          </div>
+        </div>
+      </div>
+    `;
+    // Toggle al hacer clic
+    d.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const detail = d.querySelector('.ex-detail-stats');
+      if (detail) detail.style.display = detail.style.display === 'none' ? 'block' : 'none';
+    });
     el.appendChild(d);
   });
+}
+
+// ==================== RANKING DE MÚSCULOS ====================
+function renderMuscleRanking(criteria = 'level') {
+  const container = document.getElementById('muscle-ranking-list');
+  if (!container) return;
+
+  let musclesArray = Object.entries(MUSCLES).map(([id, info]) => {
+    const data = G.muscles[id] || { lv: 0, reps: 0 };
+    return {
+      name: info.name,
+      level: data.lv,
+      reps: data.reps,
+      id: id
+    };
+  });
+
+  if (criteria === 'level') {
+    musclesArray.sort((a,b) => b.level - a.level);
+  } else {
+    musclesArray.sort((a,b) => b.reps - a.reps);
+  }
+
+  let html = `<div style="display:flex; flex-direction:column; gap:6px;">`;
+  musclesArray.forEach((m, idx) => {
+    const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${idx+1}º`;
+    const levelBarWidth = Math.min(100, (m.level / 7) * 100);
+    html += `
+      <div style="display:flex; align-items:center; gap:8px; background:var(--bg-card2); border-radius:10px; padding:6px 10px;">
+        <div style="width:32px; font-size:12px; font-weight:700; color:var(--gold);">${medal}</div>
+        <div style="flex:1; min-width:0;">
+          <div style="display:flex; justify-content:space-between;">
+            <span style="font-weight:700; font-size:13px;">${m.name}</span>
+            <span style="font-size:11px; color:var(--cyan);">${criteria === 'level' ? `Nv.${m.level}` : `${m.reps} reps`}</span>
+          </div>
+          ${criteria === 'level' ? `<div class="xpb" style="margin-top:4px;"><div class="xpb-fill" style="width:${levelBarWidth}%; background:linear-gradient(90deg, #22c55e, #9b6dff);"></div></div>` : ''}
+        </div>
+      </div>
+    `;
+  });
+  html += `</div>`;
+  container.innerHTML = html;
+}
+
+function initRankingButtons() {
+  const btnLevel = document.getElementById('rank-by-level');
+  const btnReps = document.getElementById('rank-by-reps');
+  if (btnLevel) btnLevel.onclick = () => renderMuscleRanking('level');
+  if (btnReps) btnReps.onclick = () => renderMuscleRanking('reps');
+}
+
+// ==================== SONIDOS ====================
+let audioCtx = null;
+
+function initAudio() {
+  if (audioCtx) return;
+  try {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  } catch(e) { console.warn("Web Audio API no soportada"); }
+}
+
+function playBeep(frequency, duration, volume = 0.3) {
+  if (!G.soundEnabled) return;
+  if (!audioCtx) initAudio();
+  if (!audioCtx) return;
+  if (audioCtx.state === 'suspended') return;
+  
+  const now = audioCtx.currentTime;
+  const oscillator = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  oscillator.connect(gain);
+  gain.connect(audioCtx.destination);
+  oscillator.frequency.value = frequency;
+  gain.gain.setValueAtTime(volume, now);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+  oscillator.start();
+  oscillator.stop(now + duration);
+}
+
+function playSound(type) {
+  if (!G.soundEnabled) return;
+  if (!audioCtx) initAudio();
+  if (audioCtx && audioCtx.state === 'suspended') return;
+  
+  switch(type) {
+    case 'xp':
+      playBeep(880, 0.1, 0.2);
+      break;
+    case 'levelup':
+      playBeep(440, 0.15, 0.3);
+      setTimeout(() => playBeep(880, 0.3, 0.3), 150);
+      break;
+    case 'card':
+      playBeep(660, 0.2, 0.25);
+      setTimeout(() => playBeep(880, 0.2, 0.25), 200);
+      break;
+    case 'complete':
+      playBeep(523.25, 0.2, 0.3);
+      setTimeout(() => playBeep(659.25, 0.3, 0.3), 200);
+      setTimeout(() => playBeep(783.99, 0.4, 0.3), 450);
+      break;
+    case 'click':
+      playBeep(440, 0.05, 0.1);
+      break;
+  }
+}
+
+function toggleSound() {
+  G.soundEnabled = !G.soundEnabled;
+  sv();
+  const btn = document.getElementById('toggle-sound-btn');
+  if (btn) {
+    btn.textContent = G.soundEnabled ? '🔊 Sonido ON' : '🔇 Sonido OFF';
+    toast(G.soundEnabled ? 'Sonidos activados' : 'Sonidos desactivados', G.soundEnabled ? '#4ade80' : '#f87171');
+  }
+  if (G.soundEnabled && audioCtx && audioCtx.state === 'suspended') {
+    audioCtx.resume().then(() => playBeep(440, 0.1, 0.2));
+  } else if (G.soundEnabled && !audioCtx) {
+    initAudio();
+    if (audioCtx && audioCtx.state === 'suspended') {
+      audioCtx.resume().then(() => playBeep(440, 0.1, 0.2));
+    } else if (audioCtx && audioCtx.state === 'running') {
+      playBeep(440, 0.1, 0.2);
+    }
+  }
+}
+
+function enableAudioOnFirstUserInteraction() {
+  const resumeAudio = () => {
+    if (audioCtx && audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+    document.removeEventListener('click', resumeAudio);
+    document.removeEventListener('touchstart', resumeAudio);
+  };
+  document.addEventListener('click', resumeAudio);
+  document.addEventListener('touchstart', resumeAudio);
 }
 
 // ================================================================
@@ -1197,6 +1447,7 @@ function navigate(pg){
   else if(pg==="stats")renderStats();
   else if(pg==="perfil")renderPerfil();
 }
+
 function refreshAll(){
   renderPerfil();
   if(document.getElementById("page-cuerpo").classList.contains("active"))renderBodyMap();
@@ -1249,10 +1500,72 @@ document.addEventListener("click",()=>{const t=document.getElementById("muscle-t
 // ================================================================
 // INIT
 // ================================================================
+initRankingButtons();   // Asegurar que los botones del ranking estén configurados
+// Inicializar botón de sonido según estado guardado
+const soundBtn = document.getElementById('toggle-sound-btn');
+if (soundBtn) {
+  soundBtn.textContent = G.soundEnabled ? '🔊 Sonido ON' : '🔇 Sonido OFF';
+}
+enableAudioOnFirstUserInteraction();
 ld();
+if (soundBtn) soundBtn.textContent = G.soundEnabled ? '🔊 Sonido ON' : '🔇 Sonido OFF';
 checkStreak();
 renderPerfil();
 navigate("perfil");
+
+async function shareProgressImage() {
+  const snapshotDiv = document.querySelector('.snapshot');
+  if (!snapshotDiv) {
+    toast("No se encontró el snapshot", "#f87171");
+    return;
+  }
+
+  // Mostrar un pequeño indicador de carga
+  const originalBtn = document.querySelector('#share-progress-btn');
+  if (originalBtn) {
+    originalBtn.textContent = "⏳ Generando...";
+    originalBtn.disabled = true;
+  }
+
+  try {
+    // Configurar html2canvas para mejor calidad
+    const canvas = await html2canvas(snapshotDiv, {
+      scale: 2,           // mayor resolución
+      backgroundColor: null,
+      logging: false,
+      useCORS: true
+    });
+    
+    const imageData = canvas.toDataURL('image/png');
+    
+    // Intentar compartir usando Web Share API (móvil/PC compatible)
+    if (navigator.share) {
+      // Convertir dataURL a blob
+      const blob = await (await fetch(imageData)).blob();
+      const file = new File([blob], 'fitrpg_progress.png', { type: 'image/png' });
+      await navigator.share({
+        title: 'Mi progreso en FitRPG',
+        text: `¡Nivel ${G.level} | ${G.totalReps} reps totales | Racha ${G.streak} días!`,
+        files: [file]
+      });
+      toast("¡Compartido!", "#4ade80");
+    } else {
+      // Fallback: descargar la imagen
+      const link = document.createElement('a');
+      link.download = 'fitrpg_progress.png';
+      link.href = imageData;
+      link.click();
+      toast("Imagen descargada. Puedes compartirla manualmente.", "#4ee8f0");
+    }
+  } catch (err) {
+    console.error(err);
+    toast("Error al generar la imagen", "#f87171");
+  } finally {
+    if (originalBtn) {
+      originalBtn.textContent = "📸 Compartir progreso";
+      originalBtn.disabled = false;
+    }
+  }
+}
+
 </script>
-</body>
-</html>
